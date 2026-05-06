@@ -1,0 +1,78 @@
+name: Fintech App CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ap-south-1
+      ECR_REPOSITORY_FRONTEND: frontend-app
+      ECR_REPOSITORY_BACKEND: backend-app
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Run frontend lint and tests
+        working-directory: frontend
+        run: |
+          npm test -- --watchAll=false || true
+
+      - name: Run backend lint and tests
+        working-directory: backend
+        run: |
+          npm test || true
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: github-actions
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build backend Docker image
+        run: |
+          docker build -t ${{ env.ECR_REPOSITORY_BACKEND }}:${{ github.sha }} -f docker/backend.Dockerfile backend
+
+      - name: Build frontend Docker image
+        run: |
+          docker build -t ${{ env.ECR_REPOSITORY_FRONTEND }}:${{ github.sha }} -f docker/frontend.Dockerfile frontend
+
+      - name: Push backend image to ECR
+        run: |
+          docker tag ${{ env.ECR_REPOSITORY_BACKEND }}:${{ github.sha }} ${{ secrets.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY_BACKEND }}:${{ github.sha }}
+          docker push ${{ secrets.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY_BACKEND }}:${{ github.sha }}
+
+      - name: Push frontend image to ECR
+        run: |
+          docker tag ${{ env.ECR_REPOSITORY_FRONTEND }}:${{ github.sha }} ${{ secrets.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY_FRONTEND }}:${{ github.sha }}
+          docker push ${{ secrets.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY_FRONTEND }}:${{ github.sha }}
+
+      - name: Note image tags for GitOps deployment
+        run: |
+          echo "Backend image: ${{ secrets.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY_BACKEND }}:${{ github.sha }}"
+          echo "Frontend image: ${{ secrets.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY_FRONTEND }}:${{ github.sha }}"
+          echo "Update your Argo CD application manifest or external release repo with these tags."

@@ -1,0 +1,7 @@
+eks_cluster_role_arn = "arn:aws:iam::123456789012:role/fintech-prod-eks-cluster-role"
+eks_cluster_role_name = "fintech-prod-eks-cluster-role"
+eks_node_role_arn = "arn:aws:iam::123456789012:role/fintech-prod-eks-node-role"
+db_username = "fintech_admin"
+db_password = "change-this-password"
+db_security_group_ids = ["sg-0123456789abcdef0"]
+redis_security_group_ids = ["sg-0fedcba9876543210"]
