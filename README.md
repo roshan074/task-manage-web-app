@@ -50,12 +50,7 @@ All the user Information and All the tasks are stored in Backend so you can also
 
 - ### SignIn section
   ![alt text](/Images/signin.png)
-
----
-
-- ### Home Page section
-
- ![alt text](/Images/home.png)
+  ---
 
 - ### Tasks Pages Section
   ![alt text](/Images/tasks.png)
