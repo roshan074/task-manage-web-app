@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+# Task-Manage-Web-app
+>>>>>>> 4708e74dc3696a026f679523dd96f53a949f09e2
 # **Full Stack Task Manager Web Application**
 
 _Hello Everyone..._
